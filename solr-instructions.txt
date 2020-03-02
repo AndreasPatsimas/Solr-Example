@@ -1,0 +1,55 @@
+1) download solr from https://lucene.apache.org/solr/downloads.html, the zip download
+2) in path: C:\****\solr\bin with cmd run:
+	a) solr start
+	b) solr create -c <name of collection in domain object>
+	c) solr stop -p <port>
+3) solr ui in: http://localhost:8983/solr/#/
+4) in application properties: write --> spring.data.solr.host=http://localhost:8983/solr
+5) in path: ../solr/employee/conf --> create data-config.xml
+	--><dataConfig>
+    		<dataSource type="JdbcDataSource" 
+                	    driver="com.mysql.jdbc.Driver"
+                	    url="jdbc:mysql://localhost:3306/employee_directory?serverTimezone=UCT" 
+                	    user="root" 
+                	    password="19141918"/>
+    	   <document>
+        	<entity name="employee"  
+            		pk="id"
+            		query="select id,name,email from employee"
+            		deltaImportQuery="SELECT id,name from employee WHERE id='${dih.delta.id}'"
+            		deltaQuery="SELECT id FROM employee  WHERE updated_at > '${dih.last_index_time}'"
+            >
+            		<field column="id" name="id"/>
+            		<field column="name" name="name"/>
+            		<field column="email" name="email"/>       
+        	</entity>
+    	   </document>
+	  </dataConfig>	
+
+6) in path: ../solr/employee/conf in solrconfig.xml -->
+	
+	a) import data-config.xml
+		-->   <requestHandler name="/dataimport" class="org.apache.solr.handler.dataimport.DataImportHandler">
+    			<lst name="defaults">
+      				<str name="config">data-config.xml</str>
+    			</lst>
+  		      </requestHandler>
+
+	b) import libs
+		-->   <lib dir="${solr.install.dir:../../../..}/contrib/dataimporthandler/lib" regex=".*\.jar" />
+  		      <lib dir="${solr.install.dir:../../../..}/dist/" regex="solr-dataimporthandler-.*\.jar" />
+  		      <lib dir="${solr.install.dir:../../../..}/dist/" regex="mysql-connector-java-.*\.jar" />
+		Remember mysql-connector lib must be downloaded and put the mysql-connector jar in the right path.
+
+7) in managed-schema import:
+	-->     <field name="email" type="text_general"/>
+  		<field name="id" type="string" multiValued="false" indexed="true" required="true" stored="true"/>
+  		<field name="name" type="text_general"/>
+
+8) go to solr ui:
+	a) select core
+	b) go to dataimport, choose full-import and check clean and commit,
+		choose entity, 
+		and then press execute, and then refresh status if you want
+	c) go to query and press execute query to see your data.
+		if your data appear, happy search, then!

@@ -1,0 +1,19 @@
+<dataConfig>
+    <dataSource type="JdbcDataSource" 
+                driver="com.mysql.jdbc.Driver"
+                url="jdbc:mysql://localhost:3306/employee_directory?serverTimezone=UCT" 
+                user="root" 
+                password="19141918"/>
+    <document>
+        <entity name="employee"  
+            pk="id"
+            query="select id,name,email from employee"
+            deltaImportQuery="SELECT id,name from employee WHERE id='${dih.delta.id}'"
+            deltaQuery="SELECT id FROM employee  WHERE updated_at > '${dih.last_index_time}'"
+            >
+            <field column="id" name="id"/>
+            <field column="name" name="name"/>
+            <field column="email" name="email"/>       
+        </entity>
+    </document>
+</dataConfig>
